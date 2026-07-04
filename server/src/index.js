@@ -5,6 +5,7 @@ import cors from "cors"
 import orderRouter from "./routes/order.js"
 import paymentIntentRouter from "./routes/paymentIntent.js"
 import webhookRouter from "./routes/webhook.js"
+import mercadopagoRouter from "./routes/mercadopago.js"
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -21,6 +22,7 @@ app.use("/api/webhook", express.raw({ type: "application/json" }), webhookRouter
 app.use(express.json())
 app.use("/api/order", orderRouter)
 app.use("/api/create-payment-intent", paymentIntentRouter)
+app.use("/api/mercadopago", mercadopagoRouter)
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "pay-gateway-server" })
