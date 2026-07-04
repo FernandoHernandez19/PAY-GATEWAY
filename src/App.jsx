@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom"
-import LandingPage from "./pages/LandingPage"
-import CheckoutPage from "./pages/CheckoutPage"
+import LandingPage from "./pages/Landing"
+import CheckoutPage from "./pages/Checkout"
 
 function App() {
 
