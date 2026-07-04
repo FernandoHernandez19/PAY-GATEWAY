@@ -14,3 +14,17 @@ export async function createPaymentIntent() {
   }
   return res.json()
 }
+
+export async function processMercadoPago(paymentData) {
+  const res = await fetch(`${API_URL}/api/mercadopago/process_payment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(paymentData),
+  })
+  
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || "No se pudo procesar el pago con Mercado Pago.")
+  }
+  return res.json()
+}
