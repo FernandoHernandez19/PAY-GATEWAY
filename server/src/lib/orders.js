@@ -7,8 +7,10 @@ export const TAX_RATE = 0.09
 export const USD_TO_PEN_RATE = 3.75
 
 export const ORDER_ITEMS = [
-  { id: 1, name: "Plan Pro — Anual", desc: "Suscripción 12 meses", price: 89.0 },
-  { id: 2, name: "Complemento de soporte", desc: "Prioritario 24/7", price: 6.99 },
+  // ── Demo de portafolio ──────────────────────────────────────────────────
+  // $0.50 USD es el mínimo que acepta Stripe. Equivale a ~S/ 1.88 PEN.
+  // En producción real, aquí vendrían los ítems de tu catálogo / base de datos.
+  { id: 1, name: "Demo — Pasarela de Pagos", desc: "Pago de prueba funcional", price: 0.50 },
 ]
 
 export function getOrderSummary() {
