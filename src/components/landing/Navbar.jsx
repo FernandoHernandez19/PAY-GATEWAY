@@ -4,9 +4,9 @@ import { Menu, X } from "lucide-react"
 import Logo from "./Logo"
 
 const LINKS = [
-  { label: "Producto", href: "#features" },
-  { label: "Clientes", href: "#social-proof" },
-  { label: "Documentación", href: "#" },
+  { label: "Características", href: "#features" },
+  { label: "Sobre el Desarrollador", href: "https://github.com/FernandoHernandez19", external: true },
+  { label: "Código Fuente", href: "https://github.com/FernandoHernandez19/PAY-GATEWAY", external: true },
 ]
 
 export default function Navbar() {
@@ -28,6 +28,8 @@ export default function Navbar() {
             <a
               key={l.label}
               href={l.href}
+              target={l.external ? "_blank" : undefined}
+              rel={l.external ? "noopener noreferrer" : undefined}
               className="text-sm text-slate-400 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B] rounded"
             >
               {l.label}
@@ -70,6 +72,8 @@ export default function Navbar() {
               <a
                 key={l.label}
                 href={l.href}
+                target={l.external ? "_blank" : undefined}
+                rel={l.external ? "noopener noreferrer" : undefined}
                 onClick={() => setOpen(false)}
                 className="rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
               >

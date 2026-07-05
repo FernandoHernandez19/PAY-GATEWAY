@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import { Elements } from "@stripe/react-stripe-js"
-import { Lock, Loader2, Wallet } from "lucide-react"
+import { Lock, Loader2, Wallet, ArrowLeft } from "lucide-react"
 
 import { stripePromise } from "../lib/stripe"
 import { stripeAppearance } from "../lib/stripeAppearance"
@@ -146,14 +147,25 @@ export default function Checkout() {
   return (
     <main className="min-h-dvh bg-slate-50 px-4 py-8 sm:px-6 lg:py-14">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white">
-              <Wallet className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="text-lg font-semibold text-slate-900">Acme Pay</span>
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                to="/"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Volver al inicio"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white">
+                  <Wallet className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="text-lg font-semibold text-slate-900">Acme Pay</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
+          <div className="flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 sm:w-auto">
             <Lock className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
             Conexión cifrada
           </div>

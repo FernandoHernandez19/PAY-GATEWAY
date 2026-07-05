@@ -4,6 +4,9 @@
 export const currency = (n) =>
   n.toLocaleString("es-MX", { style: "currency", currency: "USD" })
 
+export const currencyPEN = (n) =>
+  n.toLocaleString("es-PE", { style: "currency", currency: "PEN" })
+
 export function formatCardNumber(value) {
   const digits = value.replace(/\D/g, "").slice(0, 16)
   return digits.replace(/(.{4})/g, "$1 ").trim()

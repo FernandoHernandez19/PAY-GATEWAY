@@ -17,7 +17,7 @@ export default function OrderSummary({ items, subtotal, tax, total }) {
   return (
     <aside aria-label="Resumen del pedido" className="lg:sticky lg:top-14 lg:self-start">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-lg font-semibold text-slate-900">Resumen del pedido</h1>
+        <h2 className="text-lg font-semibold text-slate-900">Resumen del pedido</h2>
 
         <ul className="mt-5 divide-y divide-slate-100">
           {items.map((item) => (
