@@ -81,7 +81,7 @@ Fecha de expiración: cualquier fecha futura. CVC: cualquier 3 dígitos.
 
 > Nota: el precio en soles se calcula con una tasa de cambio fija en `server/src/lib/orders.js` (`USD_TO_PEN_RATE`), solo para esta demo. Una integración real consultaría un tipo de cambio en vivo o definiría el precio base directamente en soles.
 
-## 4. Webhook de Stripe (opcional pero recomendado para el portafolio)
+## 4. Webhook de Stripe (opcional)
 
 Con el [Stripe CLI](https://docs.stripe.com/stripe-cli) instalado:
 
