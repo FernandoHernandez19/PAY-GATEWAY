@@ -2,12 +2,16 @@ import { useEffect, useState } from "react"
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react"
 import { ShieldCheck } from "lucide-react"
 import ProcessingOverlay from "./ProcessingOverlay"
+import EmailStep from "./EmailStep"
 import { processMercadoPago } from "../../lib/api"
 
 export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorReason, setPaymentId }) {
   const isProcessing = step === "processing"
+
+  // Estado interno: null = esperando email, string = email confirmado
+  const [payerEmail, setPayerEmail] = useState(null)
   const [isReady, setIsReady] = useState(false)
-  
+
   useEffect(() => {
     const mpKey = import.meta.env.VITE_MP_PUBLIC_KEY
     if (!mpKey) {
@@ -18,14 +22,27 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     }
   }, [])
 
+  // Solo se arma initialization cuando ya tenemos el email real del pagador
   const initialization = {
     amount: totalPEN,
+    payer: {
+      email: payerEmail ?? "",
+    },
   }
 
   const customization = {
     paymentMethods: {
+      // Solo tarjetas (crédito/débito) y ticket (incluye Yape en Perú)
+      // bankTransfer está EXCLUIDO: requiere entityType y no funciona en sandbox
       creditCard: "all",
       debitCard: "all",
+      ticket: "all",
+      maxInstallments: 1,
+    },
+    visual: {
+      style: {
+        theme: "default",
+      },
     },
   }
 
@@ -64,7 +81,11 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
           Procesado de forma segura en soles peruanos.
         </p>
 
-        {isReady ? (
+        {/* Paso 1: capturar email real antes de mostrar el Brick */}
+        {!payerEmail ? (
+          <EmailStep onConfirm={(email) => setPayerEmail(email)} />
+        ) : isReady ? (
+          /* Paso 2: mostrar Payment Brick con email ya cargado */
           <Payment
             initialization={initialization}
             customization={customization}
