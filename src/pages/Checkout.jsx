@@ -13,6 +13,7 @@ import CheckoutForm from "../components/checkout/CheckoutForm"
 import MercadoPagoPayment from "../components/checkout/MercadoPagoPayment"
 import SuccessScreen from "../components/checkout/SuccessScreen"
 import ErrorScreen from "../components/checkout/ErrorScreen"
+import DemoGuide from "../components/checkout/DemoGuide"
 
 function ResultShell({ children }) {
   return (
@@ -176,6 +177,7 @@ export default function Checkout() {
 
           <div>
             <ProviderTabs provider={provider} onChange={switchProvider} disabled={step === "processing"} />
+            <DemoGuide provider={provider} />
 
             {provider === "stripe" ? (
               <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
