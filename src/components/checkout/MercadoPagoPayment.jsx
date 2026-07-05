@@ -3,13 +3,21 @@ import { initMercadoPago, Payment } from "@mercadopago/sdk-react"
 import { ShieldCheck } from "lucide-react"
 import ProcessingOverlay from "./ProcessingOverlay"
 import EmailStep from "./EmailStep"
+import YapePayment from "./YapePayment"
 import { processMercadoPago } from "../../lib/api"
+
+// Sub-tabs internos de Mercado Pago
+const MP_METHODS = [
+  { id: "card", label: "Tarjeta" },
+  { id: "yape", label: "🟣 Yape" },
+]
 
 export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorReason, setPaymentId }) {
   const isProcessing = step === "processing"
 
-  // Estado interno: null = esperando email, string = email confirmado
+  // Paso 1: capturar email | Paso 2: elegir método y pagar
   const [payerEmail, setPayerEmail] = useState(null)
+  const [mpMethod, setMpMethod] = useState("card") // "card" | "yape"
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
@@ -22,7 +30,6 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     }
   }, [])
 
-  // Solo se arma initialization cuando ya tenemos el email real del pagador
   const initialization = {
     amount: totalPEN,
     payer: {
@@ -32,11 +39,9 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
 
   const customization = {
     paymentMethods: {
-      // Solo tarjetas (crédito/débito) y ticket (incluye Yape en Perú)
-      // bankTransfer está EXCLUIDO: requiere entityType y no funciona en sandbox
+      // Solo tarjetas (crédito/débito) — Yape tiene su propio formulario
       creditCard: "all",
       debitCard: "all",
-      ticket: "all",
       maxInstallments: 1,
     },
     visual: {
@@ -64,9 +69,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     setStep("error")
   }
 
-  const onReady = async () => {
-    // El brick está listo para usarse
-  }
+  const onReady = async () => {}
 
   return (
     <section
@@ -81,20 +84,64 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
           Procesado de forma segura en soles peruanos.
         </p>
 
-        {/* Paso 1: capturar email real antes de mostrar el Brick */}
+        {/* Paso 1: capturar email real del pagador */}
         {!payerEmail ? (
           <EmailStep onConfirm={(email) => setPayerEmail(email)} />
-        ) : isReady ? (
-          /* Paso 2: mostrar Payment Brick con email ya cargado */
-          <Payment
-            initialization={initialization}
-            customization={customization}
-            onSubmit={onSubmit}
-            onReady={onReady}
-            onError={onError}
-          />
         ) : (
-          <p className="text-sm text-slate-500 text-center py-4">Cargando pasarela...</p>
+          <>
+            {/* Sub-tabs: Tarjeta vs Yape */}
+            <div
+              role="tablist"
+              aria-label="Método de pago"
+              className="mb-5 grid grid-cols-2 gap-2"
+            >
+              {MP_METHODS.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={mpMethod === m.id}
+                  onClick={() => setMpMethod(m.id)}
+                  disabled={isProcessing}
+                  className={[
+                    "rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                    mpMethod === m.id
+                      ? "border-purple-600 bg-purple-50 text-purple-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+                  ].join(" ")}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Paso 2a: Pago con tarjeta (Payment Brick) */}
+            {mpMethod === "card" && (
+              isReady ? (
+                <Payment
+                  initialization={initialization}
+                  customization={customization}
+                  onSubmit={onSubmit}
+                  onReady={onReady}
+                  onError={onError}
+                />
+              ) : (
+                <p className="text-sm text-slate-500 text-center py-4">Cargando pasarela...</p>
+              )
+            )}
+
+            {/* Paso 2b: Pago con Yape (formulario propio según docs MP) */}
+            {mpMethod === "yape" && (
+              <YapePayment
+                totalPEN={totalPEN}
+                payerEmail={payerEmail}
+                step={step}
+                setStep={setStep}
+                setErrorReason={setErrorReason}
+                setPaymentId={setPaymentId}
+              />
+            )}
+          </>
         )}
 
         <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">

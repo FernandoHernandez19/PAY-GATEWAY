@@ -7,6 +7,7 @@ import paymentIntentRouter from "./routes/paymentIntent.js"
 import webhookRouter from "./routes/webhook.js"
 import mercadopagoRouter from "./routes/mercadopago.js"
 import webhookMercadoPagoRouter from "./routes/webhookMercadoPago.js"
+import yapeRouter from "./routes/yape.js"
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -25,6 +26,7 @@ app.use(express.json())
 app.use("/api/order", orderRouter)
 app.use("/api/create-payment-intent", paymentIntentRouter)
 app.use("/api/mercadopago", mercadopagoRouter)
+app.use("/api/mercadopago", yapeRouter)   // POST /api/mercadopago/yape
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "pay-gateway-server" })
