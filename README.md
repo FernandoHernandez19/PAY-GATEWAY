@@ -96,11 +96,3 @@ Copia el `whsec_...` que imprime y pégalo en `server/.env` como `STRIPE_WEBHOOK
 **Frontend:** React 19, Vite, Tailwind CSS v4, React Router, Stripe.js / React Stripe.js, @mercadopago/sdk-react, lucide-react.
 **Backend:** Node.js, Express 5, Stripe SDK, mercadopago (Node SDK).
 
-## Despliegue
-
-Ver la guía completa de despliegue (Vercel + Render) en la conversación / documentación del proyecto.
-
-## Notas honestas sobre esta demo
-
-- Los precios y el pedido son datos mock — no hay base de datos ni carrito real.
-- El tipo de cambio USD→PEN es fijo, no en vivo.
