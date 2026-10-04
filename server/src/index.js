@@ -11,9 +11,27 @@ import yapeRouter from "./routes/yape.js"
 
 const app = express()
 const PORT = process.env.PORT || 4000
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173"
+const CLIENT_URL = process.env.CLIENT_URL || "https://pay-gateway-teal.vercel.app"
 
-app.use(cors({ origin: CLIENT_URL }))
+
+const allowedOrigins = [CLIENT_URL, 'http://localhost:5173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permite peticiones sin origin (como Postman o curl)
+    if (!origin) return callback(null, true);
+
+    // Permite dominios exactos en la lista o cualquier subdominio de preview de Vercel
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Bloqueado por CORS'));
+  },
+  credentials: true
+}));
+
+
 
 // El webhook de Stripe necesita body RAW (sin parsear) para verificar la firma
 app.use("/api/webhook", express.raw({ type: "application/json" }), webhookRouter)
