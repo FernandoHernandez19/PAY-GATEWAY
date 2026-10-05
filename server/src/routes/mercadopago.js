@@ -4,6 +4,16 @@ import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
 
+const FRIENDLY_ERROR = "No pudimos procesar el pago. Intenta nuevamente."
+
+const REJECTION_MESSAGES = {
+  cc_rejected_insufficient_amount: "Fondos insuficientes en la tarjeta.",
+  cc_rejected_bad_filled_security_code: "El código de seguridad es incorrecto.",
+  cc_rejected_bad_filled_date: "La fecha de vencimiento es incorrecta.",
+  cc_rejected_bad_filled_other: "Revisa los datos de la tarjeta e intenta nuevamente.",
+  cc_rejected_call_for_authorize: "Debes autorizar el pago con tu banco.",
+}
+
 // POST /api/mercadopago/process_payment
 router.post("/process_payment", async (req, res) => {
   try {
@@ -43,7 +53,7 @@ router.post("/process_payment", async (req, res) => {
 
     // Si la pasarela rechaza el pago, MP devuelve estado 201 pero con status "rejected"
     if (result.status === "rejected") {
-      return res.status(400).json({ error: "Pago rechazado por Mercado Pago: " + result.status_detail })
+      return res.status(400).json({ error: REJECTION_MESSAGES[result.status_detail] || "El pago fue rechazado. Intenta con otro medio de pago." })
     }
 
     res.json({
@@ -53,7 +63,7 @@ router.post("/process_payment", async (req, res) => {
     })
   } catch (error) {
     console.error("Error en MercadoPago:", error)
-    res.status(500).json({ error: error.message || "Error procesando el pago" })
+    res.status(500).json({ error: FRIENDLY_ERROR })
   }
 })
 

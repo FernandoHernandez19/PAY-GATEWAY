@@ -47,7 +47,7 @@ router.post("/yape", async (req, res) => {
 
     if (result.status === "rejected") {
       return res.status(400).json({
-        error: `Pago Yape rechazado: ${result.status_detail}`,
+        error: "El pago con Yape fue rechazado. Verifica tus datos e intenta nuevamente.",
       })
     }
 
@@ -58,7 +58,7 @@ router.post("/yape", async (req, res) => {
     })
   } catch (error) {
     console.error("Error en pago Yape:", error)
-    res.status(500).json({ error: error.message || "Error procesando el pago con Yape" })
+    res.status(500).json({ error: "No pudimos procesar el pago. Intenta nuevamente." })
   }
 })
 
