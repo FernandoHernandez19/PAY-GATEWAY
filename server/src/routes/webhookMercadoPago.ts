@@ -3,6 +3,12 @@ import { MercadoPagoConfig, Payment } from "mercadopago"
 
 const router = Router()
 
+// Notificación de Mercado Pago: tipo de evento + ID del recurso
+interface MpWebhookBody {
+  type?: string
+  data?: { id?: string | number }
+}
+
 // POST /api/mercadopago/webhook
 // Mercado Pago llama aquí para avisarnos el resultado REAL de cada pago.
 // Es especialmente crítico para métodos asíncronos como Yape, donde el
@@ -12,7 +18,7 @@ const router = Router()
 // https://www.mercadopago.com.pe/developers/es/docs/your-integrations/notifications/webhooks
 router.post("/webhook", async (req, res) => {
   // MP envía la notificación con el tipo de evento y el ID del recurso
-  const { type, data } = req.body
+  const { type, data } = req.body as MpWebhookBody
 
   // Responder 200 inmediatamente: MP reintenta si no recibe respuesta rápida
   res.sendStatus(200)
@@ -70,7 +76,7 @@ router.post("/webhook", async (req, res) => {
         console.log(`ℹ️  Estado no manejado: ${status}`)
     }
   } catch (err) {
-    console.error("Error procesando webhook de MP:", err.message)
+    console.error("Error procesando webhook de MP:", err instanceof Error ? err.message : err)
     // No relanzamos el error: ya respondimos 200 a MP para evitar reintentos
   }
 })

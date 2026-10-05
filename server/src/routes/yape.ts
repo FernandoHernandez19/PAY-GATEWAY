@@ -5,6 +5,13 @@ import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
 
+interface YapeBody {
+  token?: string
+  payerEmail?: string
+}
+
+type PaymentCreateBody = Parameters<Payment["create"]>[0]["body"]
+
 // POST /api/mercadopago/yape
 // Recibe el token generado por el SDK JS de MP en el navegador del usuario
 // y crea el pago con payment_method_id: "yape"
@@ -18,7 +25,7 @@ router.post("/yape", async (req, res) => {
       throw new Error("Falta la variable de entorno MP_ACCESS_TOKEN")
     }
 
-    const { token, payerEmail } = req.body
+    const { token, payerEmail } = req.body as YapeBody
 
     if (!token) {
       return res.status(400).json({ error: "Falta el token de Yape." })
@@ -33,7 +40,7 @@ router.post("/yape", async (req, res) => {
     // El monto lo tomamos SIEMPRE del backend (nunca del frontend por seguridad)
     const order = getOrderSummary()
 
-    const body = {
+    const body: PaymentCreateBody = {
       token,                              // Token de un solo uso generado por mp.yape.create()
       transaction_amount: order.totalPEN, // Monto en soles peruanos (PEN)
       description: "Pago en Veltra",

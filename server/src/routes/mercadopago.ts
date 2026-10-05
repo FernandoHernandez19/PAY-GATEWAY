@@ -5,9 +5,23 @@ import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
 
+// Datos que envía el Payment Brick (todos opcionales: se validan abajo)
+interface ProcessPaymentBody {
+  token?: string
+  installments?: number
+  payment_method_id?: string
+  issuer_id?: number // así lo tipa el SDK; se reenvía tal cual llega del Brick
+  payer?: {
+    email?: string
+    identification?: { type?: string; number?: string }
+  }
+}
+
+type PaymentCreateBody = Parameters<Payment["create"]>[0]["body"]
+
 const FRIENDLY_ERROR = "No pudimos procesar el pago. Intenta nuevamente."
 
-const REJECTION_MESSAGES = {
+const REJECTION_MESSAGES: Partial<Record<string, string>> = {
   cc_rejected_insufficient_amount: "Fondos insuficientes en la tarjeta.",
   cc_rejected_bad_filled_security_code: "El código de seguridad es incorrecto.",
   cc_rejected_bad_filled_date: "La fecha de vencimiento es incorrecta.",
@@ -23,7 +37,9 @@ router.post("/process_payment", async (req, res) => {
       throw new Error("Falta la variable de entorno MP_ACCESS_TOKEN")
     }
 
-    if (!req.body.token || !req.body.payment_method_id) {
+    const input = req.body as ProcessPaymentBody
+
+    if (!input.token || !input.payment_method_id) {
       return res.status(400).json({ error: "Faltan datos de la tarjeta. Revisa la información e intenta nuevamente." })
     }
 
@@ -35,16 +51,16 @@ router.post("/process_payment", async (req, res) => {
 
     // Armamos el payload con los datos que mandó el frontend (Payment Brick)
     // PERO el transaction_amount lo sacamos del backend por seguridad.
-    const body = {
+    const body: PaymentCreateBody = {
       transaction_amount: order.totalPEN,
-      token: req.body.token,
+      token: input.token,
       description: "Pago en Veltra",
-      installments: req.body.installments,
-      payment_method_id: req.body.payment_method_id,
-      issuer_id: req.body.issuer_id,
+      installments: input.installments,
+      payment_method_id: input.payment_method_id,
+      issuer_id: input.issuer_id,
       payer: {
-        email: req.body.payer?.email,
-        identification: req.body.payer?.identification,
+        email: input.payer?.email,
+        identification: input.payer?.identification,
       },
     }
 
@@ -52,7 +68,7 @@ router.post("/process_payment", async (req, res) => {
 
     // Si la pasarela rechaza el pago, MP devuelve estado 201 pero con status "rejected"
     if (result.status === "rejected") {
-      return res.status(400).json({ error: REJECTION_MESSAGES[result.status_detail] || "El pago fue rechazado. Intenta con otro medio de pago." })
+      return res.status(400).json({ error: REJECTION_MESSAGES[result.status_detail ?? ""] || "El pago fue rechazado. Intenta con otro medio de pago." })
     }
 
     res.json({
