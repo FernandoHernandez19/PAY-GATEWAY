@@ -1,23 +1,33 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ComponentProps } from "react"
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react"
 import { ShieldCheck } from "lucide-react"
 import ProcessingOverlay from "./ProcessingOverlay"
 import EmailStep from "./EmailStep"
 import YapePayment from "./YapePayment"
 import { processMercadoPago } from "../../lib/api"
+import type { PaymentFormCallbacks } from "../../types/checkout"
+
+// Tipos derivados del SDK: así siempre coinciden con la versión instalada
+type PaymentBrickProps = ComponentProps<typeof Payment>
+
+interface MercadoPagoPaymentProps extends PaymentFormCallbacks {
+  totalPEN: number
+}
+
+type MpMethod = "card" | "yape"
 
 // Sub-tabs internos de Mercado Pago
-const MP_METHODS = [
+const MP_METHODS: { id: MpMethod; label: string }[] = [
   { id: "card", label: "Tarjeta" },
   { id: "yape", label: "🟣 Yape" },
 ]
 
-export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorReason, setPaymentId }) {
+export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorReason, setPaymentId }: MercadoPagoPaymentProps) {
   const isProcessing = step === "processing"
 
   // Paso 1: capturar email | Paso 2: elegir método y pagar
-  const [payerEmail, setPayerEmail] = useState(null)
-  const [mpMethod, setMpMethod] = useState("card") // "card" | "yape"
+  const [payerEmail, setPayerEmail] = useState<string | null>(null)
+  const [mpMethod, setMpMethod] = useState<MpMethod>("card")
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
@@ -30,7 +40,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     }
   }, [])
 
-  const initialization = {
+  const initialization: PaymentBrickProps["initialization"] = {
     amount: totalPEN,
     payer: {
       entityType: "individual",
@@ -38,7 +48,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     },
   }
 
-  const customization = {
+  const customization: PaymentBrickProps["customization"] = {
     paymentMethods: {
       // Solo tarjetas (crédito/débito) — Yape tiene su propio formulario
       creditCard: "all",
@@ -52,19 +62,19 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     },
   }
 
-  const onSubmit = async ({ formData }) => {
+  const onSubmit: PaymentBrickProps["onSubmit"] = async ({ formData }) => {
     setStep("processing")
     try {
       const result = await processMercadoPago(formData)
       setPaymentId(result.id)
       setStep("success")
     } catch (err) {
-      setErrorReason(err.message || "El pago con Mercado Pago fue rechazado.")
+      setErrorReason((err instanceof Error && err.message) || "El pago con Mercado Pago fue rechazado.")
       setStep("error")
     }
   }
 
-  const onError = async (error) => {
+  const onError: NonNullable<PaymentBrickProps["onError"]> = async (error) => {
     console.error(error)
     if (error.type !== "critical") return
     setErrorReason("Ocurrió un error en la pasarela de Mercado Pago.")
