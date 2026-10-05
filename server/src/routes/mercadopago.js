@@ -12,6 +12,10 @@ router.post("/process_payment", async (req, res) => {
       throw new Error("Falta la variable de entorno MP_ACCESS_TOKEN")
     }
 
+    if (!req.body.token || !req.body.payment_method_id) {
+      return res.status(400).json({ error: "Faltan datos de la tarjeta. Revisa la información e intenta nuevamente." })
+    }
+
     // Inicializa el cliente de MP
     const client = new MercadoPagoConfig({ accessToken })
     const payment = new Payment(client)
