@@ -15,7 +15,7 @@ const YAPE_CASES = [
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
   function handleCopy() {
-    navigator.clipboard.writeText(text).catch(() => {})
+    navigator.clipboard.writeText(text).catch(() => { })
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -93,8 +93,8 @@ export default function DemoGuide({ provider }) {
                 <p className="mb-2 font-medium text-amber-900">Tarjeta de prueba (Mercado Pago)</p>
                 <div className="rounded-lg bg-white border border-amber-100 px-3 py-2 space-y-1.5">
                   {[
-                    { label: "N.º de tarjeta", value: "4509 9535 6623 3704" },
-                    { label: "Vencimiento", value: "11/25" },
+                    { label: "N.º de tarjeta", value: "4009 1753 3280 6176" },
+                    { label: "Vencimiento", value: "11/30" },
                     { label: "CVC", value: "123" },
                     { label: "Nombre", value: "APRO" },
                     { label: "DNI", value: "12345678" },
