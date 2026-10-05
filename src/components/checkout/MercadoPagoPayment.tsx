@@ -36,6 +36,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
       console.warn("⚠️ Falta VITE_MP_PUBLIC_KEY en el archivo .env")
     } else {
       initMercadoPago(mpKey, { locale: "es-PE" })
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- inicialización única del SDK externo al montar
       setIsReady(true)
     }
   }, [])

@@ -40,6 +40,7 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
     }
     // Cargamos el SDK v2 de MP dinámicamente (requerido para mp.yape.create)
     if (window.MercadoPago) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- inicialización única del SDK externo al montar
       setMpInstance(new window.MercadoPago(mpKey))
       return
     }
