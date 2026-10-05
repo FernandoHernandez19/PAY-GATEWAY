@@ -1,4 +1,3 @@
-import "dotenv/config"
 import express from "express"
 import cors from "cors"
 
@@ -10,7 +9,6 @@ import webhookMercadoPagoRouter from "./routes/webhookMercadoPago.js"
 import yapeRouter from "./routes/yape.js"
 
 const app = express()
-const PORT = process.env.PORT || 4000
 const CLIENT_URL = process.env.CLIENT_URL || "https://pay-gateway-teal.vercel.app"
 
 
@@ -50,6 +48,4 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true, service: "pay-gateway-server" })
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor de pagos escuchando en http://localhost:${PORT}`)
-})
+export default app

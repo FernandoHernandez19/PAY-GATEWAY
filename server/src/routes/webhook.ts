@@ -1,4 +1,5 @@
 import { Router } from "express"
+import type Stripe from "stripe"
 import { stripe } from "../lib/stripe.js"
 
 const router = Router()
@@ -13,28 +14,29 @@ const router = Router()
 // Esta ruta se monta con express.raw() en index.js (no express.json())
 // porque Stripe necesita el body sin procesar para verificar la firma.
 router.post("/", (req, res) => {
-  const signature = req.headers["stripe-signature"]
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const signature = req.headers["stripe-signature"] as string
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string
 
-  let event
+  let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret)
+    event = stripe.webhooks.constructEvent(req.body as Buffer, signature, webhookSecret)
   } catch (err) {
-    console.error("⚠️  Firma de webhook inválida:", err.message)
-    return res.status(400).send(`Webhook Error: ${err.message}`)
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("⚠️  Firma de webhook inválida:", message)
+    return res.status(400).send(`Webhook Error: ${message}`)
   }
 
   switch (event.type) {
     case "payment_intent.succeeded": {
-      const pi = event.data.object
+      const pi: Stripe.PaymentIntent = event.data.object
       console.log(`✅ Pago confirmado: ${pi.id} — ${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}`)
       // Aquí, en un proyecto real: guardar en tu base de datos que el
       // pedido quedó pagado, enviar el correo de confirmación, etc.
       break
     }
     case "payment_intent.payment_failed": {
-      const pi = event.data.object
+      const pi: Stripe.PaymentIntent = event.data.object
       console.log(`❌ Pago fallido: ${pi.id}`)
       break
     }
