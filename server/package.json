@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Backend de la pasarela de pagos: crea Payment Intents con Stripe y verifica pagos vía webhook.",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.js",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node src/index.js",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
