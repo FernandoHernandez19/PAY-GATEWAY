@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: CURRENCY,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       metadata: {
         items: order.items.map((i) => i.name).join(", "),
       },

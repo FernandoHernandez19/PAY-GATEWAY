@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { MercadoPagoConfig, Payment } from "mercadopago"
+import { randomUUID } from "node:crypto"
 import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
@@ -35,7 +36,7 @@ router.post("/yape", async (req, res) => {
     const body = {
       token,                              // Token de un solo uso generado por mp.yape.create()
       transaction_amount: order.totalPEN, // Monto en soles peruanos (PEN)
-      description: "Pago en Veltra (Acme Pay)",
+      description: "Pago en Veltra",
       installments: 1,                    // Yape es débito, siempre 1 cuota
       payment_method_id: "yape",          // ID específico para Yape en MP Perú
       payer: {
@@ -43,11 +44,11 @@ router.post("/yape", async (req, res) => {
       },
     }
 
-    const result = await paymentClient.create({ body })
+    const result = await paymentClient.create({ body, requestOptions: { idempotencyKey: randomUUID() } })
 
     if (result.status === "rejected") {
       return res.status(400).json({
-        error: `Pago Yape rechazado: ${result.status_detail}`,
+        error: "El pago con Yape fue rechazado. Verifica tus datos e intenta nuevamente.",
       })
     }
 
@@ -58,7 +59,7 @@ router.post("/yape", async (req, res) => {
     })
   } catch (error) {
     console.error("Error en pago Yape:", error)
-    res.status(500).json({ error: error.message || "Error procesando el pago con Yape" })
+    res.status(500).json({ error: "No pudimos procesar el pago. Intenta nuevamente." })
   }
 })
 
