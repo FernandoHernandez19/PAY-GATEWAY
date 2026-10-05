@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { MercadoPagoConfig, Payment } from "mercadopago"
+import { randomUUID } from "node:crypto"
 import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
@@ -43,7 +44,7 @@ router.post("/yape", async (req, res) => {
       },
     }
 
-    const result = await paymentClient.create({ body })
+    const result = await paymentClient.create({ body, requestOptions: { idempotencyKey: randomUUID() } })
 
     if (result.status === "rejected") {
       return res.status(400).json({

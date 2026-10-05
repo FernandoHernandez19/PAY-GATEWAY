@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { MercadoPagoConfig, Payment } from "mercadopago"
+import { randomUUID } from "node:crypto"
 import { getOrderSummary } from "../lib/orders.js"
 
 const router = Router()
@@ -49,7 +50,7 @@ router.post("/process_payment", async (req, res) => {
 
     console.log("MP payer:", req.body.payer?.email, "| method:", req.body.payment_method_id)
 
-    const result = await payment.create({ body })
+    const result = await payment.create({ body, requestOptions: { idempotencyKey: randomUUID() } })
 
     // Si la pasarela rechaza el pago, MP devuelve estado 201 pero con status "rejected"
     if (result.status === "rejected") {
