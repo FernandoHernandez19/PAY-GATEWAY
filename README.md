@@ -1,3 +1,5 @@
+[![CI](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml/badge.svg)](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml)
+
 # Veltra — Pasarela de pagos (React + Vite + Tailwind + Node/Express + Stripe + Mercado Pago)
 
 Landing page + checkout funcional con pagos reales en modo de prueba (sandbox), con dos proveedores:
