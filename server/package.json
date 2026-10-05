@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "description": "Backend de la pasarela de pagos: crea Payment Intents con Stripe y verifica pagos vía webhook.",
   "main": "dist/index.js",
   "scripts": {
