@@ -33,6 +33,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
   const initialization = {
     amount: totalPEN,
     payer: {
+      entityType: "individual",
       email: payerEmail ?? "",
     },
   }
