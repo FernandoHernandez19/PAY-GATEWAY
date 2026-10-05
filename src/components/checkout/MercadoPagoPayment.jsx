@@ -65,11 +65,12 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
 
   const onError = async (error) => {
     console.error(error)
+    if (error.type !== "critical") return
     setErrorReason("Ocurrió un error en la pasarela de Mercado Pago.")
     setStep("error")
   }
 
-  const onReady = async () => {}
+  const onReady = async () => { }
 
   return (
     <section
