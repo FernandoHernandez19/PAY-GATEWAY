@@ -1,6 +1,17 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, type SubmitEvent } from "react"
 import { Smartphone, Shield, Loader2, ArrowRight } from "lucide-react"
 import { createYapeTokenFallback, processYape } from "../../lib/api"
+import type { PaymentFormCallbacks } from "../../types/checkout"
+
+interface YapePaymentProps extends PaymentFormCallbacks {
+  totalPEN: number
+  payerEmail: string
+}
+
+interface YapeErrors {
+  phone?: string
+  otp?: string
+}
 
 /**
  * Formulario de pago con Yape.
@@ -12,13 +23,13 @@ import { createYapeTokenFallback, processYape } from "../../lib/api"
  * 2. El frontend llama a la API de MP para generar un token de un solo uso
  * 3. El token se envía al backend para crear el pago con payment_method_id: "yape"
  */
-export default function YapePayment({ totalPEN, payerEmail, step, setStep, setErrorReason, setPaymentId }) {
+export default function YapePayment({ totalPEN, payerEmail, step, setStep, setErrorReason, setPaymentId }: YapePaymentProps) {
   const isProcessing = step === "processing"
 
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
-  const [errors, setErrors] = useState({})
-  const [mpInstance, setMpInstance] = useState(null)
+  const [errors, setErrors] = useState<YapeErrors>({})
+  const [mpInstance, setMpInstance] = useState<MercadoPagoInstance | null>(null)
 
   // Inicializar el SDK de MP (v2) para generar el token de Yape
   useEffect(() => {
@@ -35,13 +46,17 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
     const script = document.createElement("script")
     script.src = "https://sdk.mercadopago.com/js/v2"
     script.async = true
-    script.onload = () => setMpInstance(new window.MercadoPago(mpKey))
+    script.onload = () => {
+      if (window.MercadoPago) setMpInstance(new window.MercadoPago(mpKey))
+    }
     document.body.appendChild(script)
-    return () => document.body.removeChild(script)
+    return () => {
+      document.body.removeChild(script)
+    }
   }, [])
 
   function validate() {
-    const errs = {}
+    const errs: YapeErrors = {}
     const cleanPhone = phone.replace(/\D/g, "")
     if (!cleanPhone || cleanPhone.length < 9) {
       errs.phone = "Ingresa tu número de celular (9 dígitos)."
@@ -53,7 +68,7 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
     return errs
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length > 0) {
@@ -65,7 +80,7 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
 
     try {
       // Paso 1: Generar token de Yape usando el SDK JS de MP
-      let token
+      let token: string
       if (mpInstance?.yape) {
         // Método preferido: SDK JS genera el token de forma segura
         const yapeOptions = {
@@ -90,7 +105,7 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
       setPaymentId(result.id)
       setStep("success")
     } catch (err) {
-      setErrorReason(err.message || "Ocurrió un error al procesar el pago con Yape.")
+      setErrorReason((err instanceof Error && err.message) || "Ocurrió un error al procesar el pago con Yape.")
       setStep("error")
     }
   }
