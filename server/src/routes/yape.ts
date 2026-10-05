@@ -25,7 +25,7 @@ router.post("/yape", async (req, res) => {
       throw new Error("Falta la variable de entorno MP_ACCESS_TOKEN")
     }
 
-    const { token, payerEmail } = req.body as YapeBody
+    const { token, payerEmail } = (req.body ?? {}) as YapeBody
 
     if (!token) {
       return res.status(400).json({ error: "Falta el token de Yape." })
