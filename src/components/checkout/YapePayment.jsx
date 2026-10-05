@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Smartphone, Shield, Loader2, ArrowRight } from "lucide-react"
+import { createYapeTokenFallback, processYape } from "../../lib/api"
 
 /**
  * Formulario de pago con Yape.
@@ -77,39 +78,15 @@ export default function YapePayment({ totalPEN, payerEmail, step, setStep, setEr
       } else {
         // Fallback: llamar directamente a la API de MP para obtener el token
         const mpKey = import.meta.env.VITE_MP_PUBLIC_KEY
-        const tokenRes = await fetch(
-          `https://api.mercadopago.com/platforms/pci/yape/v1/payment?public_key=${mpKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              phoneNumber: phone.replace(/\D/g, ""),
-              otp: otp.replace(/\D/g, ""),
-            }),
-          }
+        token = await createYapeTokenFallback(
+          mpKey,
+          phone.replace(/\D/g, ""),
+          otp.replace(/\D/g, ""),
         )
-        if (!tokenRes.ok) {
-          const err = await tokenRes.json().catch(() => ({}))
-          throw new Error(err?.message || "No se pudo generar el token de Yape.")
-        }
-        const tokenData = await tokenRes.json()
-        token = tokenData.id
       }
 
       // Paso 2: Enviar token al backend para crear el pago
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000"
-      const res = await fetch(`${API_URL}/api/mercadopago/yape`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, payerEmail }),
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || "El pago con Yape fue rechazado.")
-      }
-
-      const result = await res.json()
+      const result = await processYape(token, payerEmail)
       setPaymentId(result.id)
       setStep("success")
     } catch (err) {
