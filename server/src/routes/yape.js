@@ -36,7 +36,7 @@ router.post("/yape", async (req, res) => {
     const body = {
       token,                              // Token de un solo uso generado por mp.yape.create()
       transaction_amount: order.totalPEN, // Monto en soles peruanos (PEN)
-      description: "Pago en Veltra (Acme Pay)",
+      description: "Pago en Veltra",
       installments: 1,                    // Yape es débito, siempre 1 cuota
       payment_method_id: "yape",          // ID específico para Yape en MP Perú
       payer: {

@@ -38,7 +38,7 @@ router.post("/process_payment", async (req, res) => {
     const body = {
       transaction_amount: order.totalPEN,
       token: req.body.token,
-      description: "Pago en Veltra (Acme Pay)",
+      description: "Pago en Veltra",
       installments: req.body.installments,
       payment_method_id: req.body.payment_method_id,
       issuer_id: req.body.issuer_id,

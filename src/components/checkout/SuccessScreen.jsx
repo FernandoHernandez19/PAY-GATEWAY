@@ -94,7 +94,7 @@ function downloadReceiptHTML({ receiptId, formattedTotal }) {
       </div>
     </div>
     <p class="footer">
-      Emitido por <span class="brand">Acme Pay</span> · Conserva este documento como comprobante de tu pago.
+      Emitido por <span class="brand">Veltra</span> · Conserva este documento como comprobante de tu pago.
     </p>
   </div>
 </body>
