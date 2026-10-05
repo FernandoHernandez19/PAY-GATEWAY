@@ -51,7 +51,7 @@ export default function MercadoPagoPayment({ totalPEN, step, setStep, setErrorRe
     },
   }
 
-  const onSubmit = async (formData) => {
+  const onSubmit = async ({ formData }) => {
     setStep("processing")
     try {
       const result = await processMercadoPago(formData)
