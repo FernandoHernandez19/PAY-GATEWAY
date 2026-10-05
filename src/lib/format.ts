@@ -1,24 +1,24 @@
 // Funciones puras de formato y validación para el checkout.
 // No dependen de React: se pueden probar de forma aislada.
 
-export const currency = (n) =>
+export const currency = (n: number) =>
   n.toLocaleString("es-MX", { style: "currency", currency: "USD" })
 
-export const currencyPEN = (n) =>
+export const currencyPEN = (n: number) =>
   n.toLocaleString("es-PE", { style: "currency", currency: "PEN" })
 
-export function formatCardNumber(value) {
+export function formatCardNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 16)
   return digits.replace(/(.{4})/g, "$1 ").trim()
 }
 
-export function formatExpiry(value) {
+export function formatExpiry(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 4)
   if (digits.length <= 2) return digits
   return `${digits.slice(0, 2)}/${digits.slice(2)}`
 }
 
-export function detectBrand(number) {
+export function detectBrand(number: string): string {
   const n = number.replace(/\s/g, "")
   if (/^4/.test(n)) return "Visa"
   if (/^(5[1-5]|2[2-7])/.test(n)) return "Mastercard"
@@ -26,8 +26,17 @@ export function detectBrand(number) {
   return "Tarjeta"
 }
 
-export function validateCard(data) {
-  const errors = {}
+export interface CardData {
+  name: string
+  number: string
+  expiry: string
+  cvc: string
+}
+
+export type CardErrors = Partial<Record<keyof CardData, string>>
+
+export function validateCard(data: CardData): CardErrors {
+  const errors: CardErrors = {}
   if (!data.name.trim() || data.name.trim().length < 3) {
     errors.name = "Ingresa el nombre del titular."
   }

@@ -1,4 +1,14 @@
 import { CheckCircle2, Download, ArrowLeft } from "lucide-react"
+import type { PaymentId } from "../../types/payment"
+
+interface ReceiptData {
+  receiptId: PaymentId
+  formattedTotal: string
+}
+
+interface SuccessScreenProps extends ReceiptData {
+  onHome: () => void
+}
 
 /**
  * Genera un recibo como archivo HTML y lo descarga.
@@ -6,7 +16,7 @@ import { CheckCircle2, Download, ArrowLeft } from "lucide-react"
  * renderizado de SVGs en un canvas. El HTML generado es auto-contenido
  * (estilos inline) y se puede abrir en cualquier navegador o imprimir.
  */
-function downloadReceiptHTML({ receiptId, formattedTotal }) {
+function downloadReceiptHTML({ receiptId, formattedTotal }: ReceiptData) {
   const now = new Date().toLocaleString("es-PE", {
     dateStyle: "full",
     timeStyle: "short",
@@ -111,7 +121,7 @@ function downloadReceiptHTML({ receiptId, formattedTotal }) {
   URL.revokeObjectURL(url)
 }
 
-export default function SuccessScreen({ formattedTotal, receiptId, onHome }) {
+export default function SuccessScreen({ formattedTotal, receiptId, onHome }: SuccessScreenProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">

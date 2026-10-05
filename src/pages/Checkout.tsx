@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { Elements } from "@stripe/react-stripe-js"
 import { Lock, Loader2, Wallet, ArrowLeft } from "lucide-react"
@@ -15,7 +15,11 @@ import SuccessScreen from "../components/checkout/SuccessScreen"
 import ErrorScreen from "../components/checkout/ErrorScreen"
 import DemoGuide from "../components/checkout/DemoGuide"
 
-function ResultShell({ children }) {
+import type { CheckoutStep, PaymentProvider } from "../types/checkout"
+import type { OrderSummary as OrderSummaryData } from "../types/order"
+import type { PaymentId } from "../types/payment"
+
+function ResultShell({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-md">{children}</div>
@@ -23,7 +27,13 @@ function ResultShell({ children }) {
   )
 }
 
-function ProviderTabs({ provider, onChange, disabled }) {
+interface ProviderTabsProps {
+  provider: PaymentProvider
+  onChange: (next: PaymentProvider) => void
+  disabled: boolean
+}
+
+function ProviderTabs({ provider, onChange, disabled }: ProviderTabsProps) {
   return (
     <div className="mb-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Proveedor de pago">
       <button
@@ -61,16 +71,15 @@ function ProviderTabs({ provider, onChange, disabled }) {
 }
 
 export default function Checkout() {
-  const [order, setOrder] = useState(null)
-  const [clientSecret, setClientSecret] = useState(null)
+  const [order, setOrder] = useState<OrderSummaryData | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loadError, setLoadError] = useState("")
 
-  const [provider, setProvider] = useState("stripe") // "stripe" | "mercadopago"
+  const [provider, setProvider] = useState<PaymentProvider>("stripe")
 
-  // "ready" | "processing" | "success" | "error"
-  const [step, setStep] = useState("ready")
+  const [step, setStep] = useState<CheckoutStep>("ready")
   const [errorReason, setErrorReason] = useState("")
-  const [paymentId, setPaymentId] = useState("")
+  const [paymentId, setPaymentId] = useState<PaymentId>("")
 
   useEffect(() => {
     async function bootstrap() {
@@ -85,7 +94,7 @@ export default function Checkout() {
         const { clientSecret } = await createPaymentIntent()
         setClientSecret(clientSecret)
       } catch (err) {
-        setLoadError(err.message || "No se pudo conectar con el servidor de pagos.")
+        setLoadError((err instanceof Error && err.message) || "No se pudo conectar con el servidor de pagos.")
       }
     }
     bootstrap()
@@ -96,7 +105,7 @@ export default function Checkout() {
     setErrorReason("")
   }
 
-  function switchProvider(next) {
+  function switchProvider(next: PaymentProvider) {
     setProvider(next)
     setStep("ready")
     setErrorReason("")
@@ -115,7 +124,7 @@ export default function Checkout() {
     )
   }
 
-  if (step === "success") {
+  if (step === "success" && order) {
     const formattedTotal = provider === "mercadopago" ? currencyPEN(order.totalPEN) : currency(order.total)
     return (
       <ResultShell>

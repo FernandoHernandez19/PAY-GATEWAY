@@ -2,7 +2,9 @@
 // con el resto del checkout en vez de verse como un widget ajeno.
 // Referencia: https://docs.stripe.com/elements/appearance-api
 
-export const stripeAppearance = {
+import type { Appearance } from "@stripe/stripe-js"
+
+export const stripeAppearance: Appearance = {
   theme: "stripe",
   variables: {
     colorPrimary: "#2563eb", // blue-600, mismo azul del botón "Pagar"

@@ -1,14 +1,20 @@
+import type { SubmitEvent } from "react"
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { Lock, ShieldCheck, Loader2 } from "lucide-react"
 import { currency } from "../../lib/format"
 import ProcessingOverlay from "./ProcessingOverlay"
+import type { PaymentFormCallbacks } from "../../types/checkout"
 
-export default function CheckoutForm({ total, step, setStep, setErrorReason, setPaymentId }) {
+interface CheckoutFormProps extends PaymentFormCallbacks {
+  total: number
+}
+
+export default function CheckoutForm({ total, step, setStep, setErrorReason, setPaymentId }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const isProcessing = step === "processing"
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!stripe || !elements) return // Stripe.js todavía no terminó de cargar
 

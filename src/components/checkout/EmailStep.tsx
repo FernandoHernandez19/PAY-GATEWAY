@@ -1,5 +1,9 @@
-import { useState } from "react"
+import { useState, type SubmitEvent } from "react"
 import { Mail, ArrowRight } from "lucide-react"
+
+interface EmailStepProps {
+  onConfirm: (email: string) => void
+}
 
 /**
  * Paso previo al Payment Brick de Mercado Pago.
@@ -8,7 +12,7 @@ import { Mail, ArrowRight } from "lucide-react"
  *
  * @param {function} onConfirm - Recibe el email confirmado
  */
-export default function EmailStep({ onConfirm }) {
+export default function EmailStep({ onConfirm }: EmailStepProps) {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
 
@@ -19,7 +23,7 @@ export default function EmailStep({ onConfirm }) {
     return ""
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     const err = validate()
     if (err) {

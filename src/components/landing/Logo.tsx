@@ -1,4 +1,8 @@
-export default function Logo({ className = "" }) {
+interface LogoProps {
+  className?: string
+}
+
+export default function Logo({ className = "" }: LogoProps) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 shadow-lg shadow-blue-500/20">

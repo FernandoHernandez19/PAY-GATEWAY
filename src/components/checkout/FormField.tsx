@@ -1,4 +1,19 @@
+import type { HTMLAttributes, ReactNode } from "react"
 import { CheckCircle2, XCircle } from "lucide-react"
+
+interface FormFieldProps {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+  onBlur?: () => void
+  state: "idle" | "error" | "success"
+  error?: string
+  placeholder?: string
+  inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"]
+  autoComplete?: string
+  trailing?: ReactNode
+}
 
 export default function FormField({
   id,
@@ -12,7 +27,7 @@ export default function FormField({
   inputMode,
   autoComplete,
   trailing,
-}) {
+}: FormFieldProps) {
   const border =
     state === "error"
       ? "border-red-500 focus-visible:ring-red-500/25"
