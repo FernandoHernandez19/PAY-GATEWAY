@@ -37,7 +37,7 @@ router.post("/process_payment", async (req, res) => {
       throw new Error("Falta la variable de entorno MP_ACCESS_TOKEN")
     }
 
-    const input = req.body as ProcessPaymentBody
+    const input = (req.body ?? {}) as ProcessPaymentBody
 
     if (!input.token || !input.payment_method_id) {
       return res.status(400).json({ error: "Faltan datos de la tarjeta. Revisa la información e intenta nuevamente." })

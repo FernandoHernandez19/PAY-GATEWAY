@@ -213,10 +213,8 @@ describe("POST /api/mercadopago/yape", () => {
   })
 })
 
-// BUG CONOCIDO (no corregido en este PR, que no toca código de producción):
-// en Express 5, req.body es undefined cuando no llega un cuerpo JSON, y los
-// handlers leen req.body.token / desestructuran req.body dentro del try, por lo
-// que la petición termina en 500 en vez de 400. Se activan al corregir el handler.
+// En Express 5, req.body es undefined cuando no llega un cuerpo JSON: los handlers
+// lo normalizan con `?? {}` para que la validación existente responda 400.
 describe("peticiones sin cuerpo JSON", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {})
@@ -226,12 +224,12 @@ describe("peticiones sin cuerpo JSON", () => {
     vi.restoreAllMocks()
   })
 
-  it.skip("responde 400 en Mercado Pago cuando no llega ningún cuerpo", async () => {
+  it("responde 400 en Mercado Pago cuando no llega ningún cuerpo", async () => {
     const res = await request(app).post("/api/mercadopago/process_payment")
     expect(res.status).toBe(400)
   })
 
-  it.skip("responde 400 en Yape cuando no llega ningún cuerpo", async () => {
+  it("responde 400 en Yape cuando no llega ningún cuerpo", async () => {
     const res = await request(app).post("/api/mercadopago/yape")
     expect(res.status).toBe(400)
   })
