@@ -33,8 +33,10 @@ router.post("/process_payment", async (req, res) => {
       },
     }
 
+    console.log("MP payer:", req.body.payer?.email, "| method:", req.body.payment_method_id)
+
     const result = await payment.create({ body })
-    
+
     // Si la pasarela rechaza el pago, MP devuelve estado 201 pero con status "rejected"
     if (result.status === "rejected") {
       return res.status(400).json({ error: "Pago rechazado por Mercado Pago: " + result.status_detail })
