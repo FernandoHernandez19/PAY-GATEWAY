@@ -1,7 +1,15 @@
+import type { ReactNode } from "react"
 import { ShieldCheck, Lock } from "lucide-react"
 import { currency } from "../../lib/format"
+import type { OrderSummary as OrderSummaryData } from "../../types/order"
 
-function TrustBadge({ icon, title, subtitle }) {
+interface TrustBadgeProps {
+  icon: ReactNode
+  title: string
+  subtitle: string
+}
+
+function TrustBadge({ icon, title, subtitle }: TrustBadgeProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">{icon}</span>
@@ -13,7 +21,9 @@ function TrustBadge({ icon, title, subtitle }) {
   )
 }
 
-export default function OrderSummary({ items, subtotal, tax, total }) {
+type OrderSummaryProps = Pick<OrderSummaryData, "items" | "subtotal" | "tax" | "total">
+
+export default function OrderSummary({ items, subtotal, tax, total }: OrderSummaryProps) {
   return (
     <aside aria-label="Resumen del pedido" className="lg:sticky lg:top-14 lg:self-start">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">

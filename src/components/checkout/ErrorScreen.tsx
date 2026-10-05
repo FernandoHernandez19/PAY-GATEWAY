@@ -1,6 +1,11 @@
 import { XCircle, RotateCcw } from "lucide-react"
 
-export default function ErrorScreen({ reason, onRetry }) {
+interface ErrorScreenProps {
+  reason?: string
+  onRetry: () => void
+}
+
+export default function ErrorScreen({ reason, onRetry }: ErrorScreenProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">

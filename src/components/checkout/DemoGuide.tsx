@@ -1,4 +1,5 @@
 import { useState } from "react"
+import type { PaymentProvider } from "../../types/checkout"
 import { FlaskConical, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
 
 const STRIPE_CARDS = [
@@ -12,7 +13,7 @@ const YAPE_CASES = [
   { phone: "111111112", otp: "123456", label: "Rechazado", badge: "❌", color: "red" },
 ]
 
-function CopyButton({ text }) {
+function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   function handleCopy() {
     navigator.clipboard.writeText(text).catch(() => { })
@@ -39,7 +40,7 @@ function CopyButton({ text }) {
  * Stripe siempre usa datos de prueba (modo test / sandbox).
  * Mercado Pago en modo test también tiene tarjetas y datos Yape de prueba.
  */
-export default function DemoGuide({ provider }) {
+export default function DemoGuide({ provider }: { provider: PaymentProvider }) {
   const [open, setOpen] = useState(true)
 
   return (
