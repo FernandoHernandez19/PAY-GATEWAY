@@ -1,100 +1,174 @@
+# Veltra — Pasarela de pagos demo
+
+Checkout que acepta **tarjetas internacionales (Stripe)** y **pagos locales en soles para Perú (Mercado Pago con tarjeta y Yape)**, con un backend propio que calcula el monto y verifica los webhooks.
+
 [![CI](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml/badge.svg)](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml)
+[![Demo en vivo](https://img.shields.io/badge/demo-en%20vivo-2563eb)](https://pay-gateway-teal.vercel.app)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](tsconfig.app.json)
 
-# Veltra — Pasarela de pagos (React + Vite + Tailwind + Node/Express + Stripe + Mercado Pago)
+## 👉 [**Abrir la demo en vivo**](https://pay-gateway-teal.vercel.app)
 
-Landing page + checkout funcional con pagos reales en modo de prueba (sandbox), con dos proveedores:
-**Stripe** (tarjetas internacionales) y **Mercado Pago** (pago local en soles, pensado para LATAM).
-Ningún dato de tarjeta pasa por el backend propio en ninguno de los dos casos: cada proveedor
-captura los datos de forma segura en el navegador (tokenización), y el backend solo confirma
-el resultado del cargo.
+> ⏳ **Aviso:** la API corre en el plan gratuito de Render (`https://pay-gateway-77kg.onrender.com`). Si lleva un rato sin uso, la **primera petición puede tardar ~50 segundos** en despertar; después responde con normalidad. Todo funciona en **modo de prueba**: no se mueve dinero real.
+
+## Capturas
+
+| Landing | Checkout | Pago exitoso |
+| :---: | :---: | :---: |
+| ![Landing de Veltra](docs/screenshots/landing.png) | ![Checkout con Stripe y Mercado Pago](docs/screenshots/checkout.png) | ![Pantalla de pago exitoso](docs/screenshots/exito.png) |
+
+## Funcionalidades
+
+- **Landing** con navegación, hero, sección de funcionalidades y footer (`src/components/landing`).
+- **Checkout con dos proveedores** intercambiables mediante pestañas: *Tarjeta internacional* (Stripe Payment Element) y *Mercado Pago (Local)* (`src/pages/Checkout.tsx`).
+- **Mercado Pago**: Payment Brick con tarjeta de crédito/débito y un formulario propio de **Yape** (celular + OTP), cobrando en soles.
+- **Resumen del pedido** que se pide al servidor (`GET /api/order`); el frontend no define precios.
+- **Estados de pago**: pantalla de procesamiento, de error con reintento y de éxito con **descarga del recibo en HTML** (`SuccessScreen.tsx`).
+- **Panel "Modo demo"** en el checkout con los datos de prueba de cada proveedor.
+- **Webhooks** de Stripe (con verificación de firma) y de Mercado Pago, que consultan/registran el resultado real del pago en el servidor.
 
 ## Arquitectura
 
+```mermaid
+flowchart LR
+    U[Navegador] -->|HTTPS| F[Frontend<br/>React + Vite<br/>Vercel]
+    F -->|/api/*| A[API Express + TypeScript<br/>Render]
+    U -. tokeniza la tarjeta .-> S[Stripe]
+    U -. tokeniza la tarjeta / Yape .-> M[Mercado Pago]
+    A -->|PaymentIntent| S
+    A -->|Payment| M
+    S -. webhook firmado .-> A
+    M -. webhook .-> A
 ```
-Frontend (Vite/React)
-  │
-  ├─ Pestaña "Tarjeta internacional" ──POST /api/create-payment-intent──▶ Backend ──▶ Stripe API
-  │                                    ◀──────────── clientSecret ───────────────────┘
-  │                                    Stripe.js (Payment Element) confirma el pago
-  │
-  └─ Pestaña "Mercado Pago"          ──Payment Brick genera un token en el navegador
-                                       │
-                                       └─POST /api/mercadopago/process_payment (token)──▶ Backend ──▶ MP API
-```
 
-## Requisitos
+El navegador envía los datos sensibles directamente a Stripe / Mercado Pago (tokenización) y a la API solo llegan tokens; la API crea el cobro y recibe los webhooks de vuelta.
 
-- Node.js 18+
-- Una cuenta gratuita de Stripe (https://dashboard.stripe.com/register) — selecciona "United States" al registrarte; no hace falta para el modo de prueba.
-- Una cuenta gratuita de Mercado Pago para desarrolladores (https://www.mercadopago.com/developers).
+## Decisiones técnicas
 
-## 1. Backend
+- **El monto lo calcula el servidor, no el cliente.** Stripe y Mercado Pago ignoran cualquier importe enviado por el navegador. → `server/src/lib/orders.ts`, `server/src/routes/paymentIntent.ts`, `server/src/routes/mercadopago.ts`.
+- **Tokenización en el navegador.** Los datos de tarjeta nunca pasan por el backend propio: Stripe Elements y el Payment Brick de Mercado Pago generan el token/confirmación. → `src/components/checkout/CheckoutForm.tsx`, `MercadoPagoPayment.tsx`.
+- **`express.raw` antes de `express.json` en el webhook de Stripe.** La firma se verifica sobre los bytes exactos del cuerpo; si se parseara antes, dejaría de coincidir. → `server/src/app.ts`, `server/src/routes/webhook.ts`.
+- **Clave de idempotencia** (`randomUUID`) en cada creación de pago de Mercado Pago/Yape para evitar cobros duplicados por reintentos. → `server/src/routes/mercadopago.ts`, `yape.ts`.
+- **Errores amigables sin exponer detalles técnicos.** El error completo se registra en el servidor y al cliente se le devuelve un mensaje claro (incluido el motivo de rechazo mapeado). → `server/src/routes/mercadopago.ts`, `yape.ts`.
+- **App separada del arranque** (`app.ts` exporta la app; `index.ts` hace `listen`) para poder probar los endpoints con Supertest sin abrir un puerto. → `server/src/app.ts`, `server/src/index.ts`.
+- **Moneda local con tasa fija (solo demo).** El total en soles se calcula con `USD_TO_PEN_RATE`; una integración real usaría un tipo de cambio en vivo. → `server/src/lib/orders.ts`.
+
+## Calidad
+
+- **TypeScript `strict`** en frontend y servidor; `grep -rn ": any\|as any" src server/src` no devuelve resultados.
+- **Tests: 106 en total** (`npm run test` en cada paquete): **58** en el frontend (7 archivos, Vitest + Testing Library) y **48** en el servidor (5 archivos, Vitest + Supertest). Los SDK de Stripe y Mercado Pago se simulan con `vi.mock`: ningún test llama a APIs reales ni usa claves reales.
+- **Cobertura** de `server/src/lib` (`npm run test:coverage`): **93,75 % de líneas** (umbral mínimo configurado: 70 %).
+- **CI en cada PR y push a `main`** (GitHub Actions): lint, typecheck, tests y build del frontend; typecheck, tests con cobertura y build del servidor.
+
+## Datos de prueba
+
+> El panel **"Modo demo"** del checkout muestra estos datos con botón de copiar.
+
+**Stripe** (cualquier fecha futura, CVC y código postal):
+
+| Número | Resultado |
+| --- | --- |
+| `4242 4242 4242 4242` | Pago exitoso |
+| `4000 0000 0000 0002` | Pago rechazado |
+| `4000 0025 0000 3155` | Requiere 3D Secure |
+
+**Mercado Pago Perú — tarjetas** (vencimiento `11/30`):
+
+| Tarjeta | Número | Titular | Resultado |
+| --- | --- | --- | --- |
+| Visa crédito | `4009 1753 3280 6176` | `APRO` | Aprobado |
+| Visa crédito | `4009 1753 3280 6176` | `OTHE` | Rechazado |
+| Mastercard débito | `5178 7816 2220 2455` | `APRO` / `OTHE` | Aprobado / Rechazado |
+
+**Yape** (modo prueba):
+
+| Celular | OTP | Resultado |
+| --- | --- | --- |
+| `111111111` | `123456` | Aprobado |
+| `111111112` | `123456` | Rechazado |
+
+## Correr en local
+
+**Requisitos:** Node.js 22 (ver `.nvmrc`; mínimo 22.12) y cuentas de prueba de [Stripe](https://dashboard.stripe.com/test/apikeys) y [Mercado Pago Developers](https://www.mercadopago.com.pe/developers).
 
 ```bash
+# 1) Servidor (http://localhost:4000)
 cd server
+cp .env.example .env      # completa tus claves de PRUEBA
 npm install
-cp .env.example .env
-```
-
-Completa `server/.env` con:
-- `STRIPE_SECRET_KEY` — Dashboard de Stripe → Developers → API keys → "Secret key" (`sk_test_...`)
-- `MP_ACCESS_TOKEN` — Panel de desarrolladores de Mercado Pago → Tus integraciones → Credenciales de prueba → Access Token
-
-```bash
 npm run dev
-```
 
-Debe imprimir: `🚀 Servidor de pagos escuchando en http://localhost:4000`
-
-## 2. Frontend
-
-```bash
-cp .env.example .env
-```
-
-Completa `.env` (raíz del proyecto) con:
-- `VITE_STRIPE_PUBLISHABLE_KEY` — clave **pública** de prueba de Stripe (`pk_test_...`)
-- `VITE_MP_PUBLIC_KEY` — Public Key de prueba de Mercado Pago (`TEST-...`)
-
-```bash
+# 2) Frontend (http://localhost:5173), en otra terminal, desde la raíz
+cp .env.example .env      # completa tus claves públicas de PRUEBA
 npm install
 npm run dev
 ```
 
-Abre `http://localhost:5173`, navega a "Empezar" → verás el checkout real con las dos pestañas de pago.
+**Variables de entorno** (los `.env.example` solo traen marcadores, nunca claves reales):
 
-## 3. Probar un pago (modo test, sin dinero real)
+| Variable | Dónde | Descripción |
+| --- | --- | --- |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Frontend | Clave pública de Stripe (`pk_test_...`) |
+| `VITE_MP_PUBLIC_KEY` | Frontend | Public key de Mercado Pago (`TEST-...`) |
+| `VITE_API_URL` | Frontend | URL de la API (`http://localhost:4000` en local) |
+| `STRIPE_SECRET_KEY` | Servidor | Clave secreta de Stripe (`sk_test_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Servidor | Secreto de firma del webhook (`whsec_...`) |
+| `MP_ACCESS_TOKEN` | Servidor | Access token de Mercado Pago (`TEST-...`) |
+| `PORT` | Servidor | Puerto de la API (`4000`) |
+| `CLIENT_URL` | Servidor | Origen del frontend permitido por CORS (`http://localhost:5173`) |
 
-**Con Stripe** — usa cualquiera de sus tarjetas de prueba:
-
-| Escenario | Número de tarjeta |
-|---|---|
-| Pago exitoso | `4242 4242 4242 4242` |
-| Pago rechazado | `4000 0000 0000 0002` |
-| Requiere autenticación 3D Secure | `4000 0025 0000 3155` |
-
-Fecha de expiración: cualquier fecha futura. CVC: cualquier 3 dígitos.
-
-**Con Mercado Pago (pestaña local)**:
-
-1. Ingresa a tu panel de desarrolladores en Mercado Pago.
-2. Ve a Cuentas de prueba y crea tarjetas de prueba genéricas (ej: terminadas en `0341` para Aprobada).
-3. Prueba ingresando cualquier nombre y documento en el formulario seguro (ej: DNI peruano 8 dígitos).
-
-> Nota: el precio en soles se calcula con una tasa de cambio fija en `server/src/lib/orders.js` (`USD_TO_PEN_RATE`), solo para esta demo. Una integración real consultaría un tipo de cambio en vivo o definiría el precio base directamente en soles.
-
-## 4. Webhook de Stripe (opcional)
-
-Con el [Stripe CLI](https://docs.stripe.com/stripe-cli) instalado:
+**Webhook de Stripe en local** (opcional, con [Stripe CLI](https://docs.stripe.com/stripe-cli)):
 
 ```bash
 stripe listen --forward-to localhost:4000/api/webhook
 ```
 
-Copia el `whsec_...` que imprime y pégalo en `server/.env` como `STRIPE_WEBHOOK_SECRET`. Así el backend confirma cada pago de Stripe de forma independiente al navegador del usuario — la práctica correcta en producción.
+Copia el `whsec_...` que imprime a `STRIPE_WEBHOOK_SECRET`.
 
-## Stack
+**Scripts útiles**
 
-**Frontend:** React 19, Vite, Tailwind CSS v4, React Router, Stripe.js / React Stripe.js, @mercadopago/sdk-react, lucide-react.
-**Backend:** Node.js, Express 5, Stripe SDK, mercadopago (Node SDK).
+| Comando | Raíz (frontend) | `server/` |
+| --- | --- | --- |
+| `npm run test` | Vitest + Testing Library | Vitest + Supertest |
+| `npm run typecheck` | `tsc -b` | `tsc --noEmit` |
+| `npm run build` | `vite build` | `tsc` → `dist/` (`npm start`) |
+| `npm run lint` | ESLint | — |
+| `npm run test:coverage` | — | Cobertura v8 |
 
+## Estructura del proyecto
+
+```text
+.
+├── src/                    # Frontend (React + TypeScript)
+│   ├── components/
+│   │   ├── landing/        # Navbar, Hero, Features, Footer…
+│   │   └── checkout/       # Formularios de pago, resumen, estados
+│   ├── pages/              # Landing y Checkout
+│   ├── lib/                # Cliente de la API, formato, Stripe
+│   └── types/              # Tipos compartidos (pedido, pago, pasos)
+├── server/
+│   └── src/
+│       ├── app.ts          # Configura la app (CORS, middlewares, rutas)
+│       ├── index.ts        # Arranque (listen)
+│       ├── lib/            # Montos del pedido, cliente de Stripe
+│       └── routes/         # order, paymentIntent, webhook, mercadopago, yape
+├── docs/screenshots/       # Capturas del README
+└── .github/workflows/      # CI
+```
+
+## Qué aprendí
+
+- **TypeScript con SDKs de pago:** derivar tipos del propio SDK (`ComponentProps<typeof Payment>`, `Stripe.Event`) en lugar de duplicarlos, y acotar entradas externas con `unknown` y *narrowing* en vez de `any`.
+- **Webhooks y firmas:** por qué el cuerpo debe llegar crudo para verificar la firma y cómo probarlo con firmas generadas localmente.
+- **Testing con mocks:** simular Stripe y Mercado Pago para tests deterministas, probar componentes como lo haría el usuario y endpoints con Supertest.
+- **CI:** automatizar lint, tipos, tests y build en cada PR, y leer un fallo desde la pestaña Actions.
+- **Depurar integraciones en sandbox:** distinguir errores del proveedor, de datos de prueba y del propio código, y no filtrar detalles técnicos al usuario.
+
+## Próximos pasos
+
+- Persistir los pedidos y su estado de pago (hoy los webhooks solo registran el resultado).
+- Reemplazar la tasa de cambio fija por un tipo de cambio en vivo.
+- Agregar tests end-to-end del flujo de checkout.
+
+## Autor
+
+**Luis Fernando Hernández Chunga** · [LinkedIn](https://www.linkedin.com/in/fernando-hern%C3%A1ndez-5b1148367/) · [GitHub @FernandoHernandez19](https://github.com/FernandoHernandez19)
