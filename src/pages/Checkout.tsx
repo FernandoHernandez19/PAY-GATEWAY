@@ -7,6 +7,7 @@ import { stripePromise } from "../lib/stripe"
 import { stripeAppearance } from "../lib/stripeAppearance"
 import { fetchOrderSummary, createPaymentIntent } from "../lib/api"
 import { currency, currencyPEN } from "../lib/format"
+import { mercadoPagoEnabled } from "../lib/config"
 
 import OrderSummary from "../components/checkout/OrderSummary"
 import CheckoutForm from "../components/checkout/CheckoutForm"
@@ -61,12 +62,35 @@ function ProviderTabs({ provider, onChange, disabled }: ProviderTabsProps) {
           "rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
           provider === "mercadopago"
             ? "border-blue-600 bg-blue-50 text-blue-700"
-            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",
+            : mercadoPagoEnabled
+              ? "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+              : "border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300",
         ].join(" ")}
       >
-        Mercado Pago (Local)
+        {mercadoPagoEnabled ? "Mercado Pago (Local)" : "Pago local (Yape) · Próximamente"}
       </button>
     </div>
+  )
+}
+
+function LocalPaymentsPaused({ onUseCard }: { onUseCard: () => void }) {
+  return (
+    <section
+      aria-label="Pagos locales en pausa"
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <p className="text-sm text-slate-600">
+        Los pagos locales con Yape están en pausa mientras migramos de proveedor. Puedes probar el flujo
+        completo con tarjeta internacional.
+      </p>
+      <button
+        type="button"
+        onClick={onUseCard}
+        className="mt-5 w-full rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/30 active:bg-blue-800"
+      >
+        Pagar con tarjeta internacional
+      </button>
+    </section>
   )
 }
 
@@ -198,6 +222,8 @@ export default function Checkout() {
                   setPaymentId={setPaymentId}
                 />
               </Elements>
+            ) : !mercadoPagoEnabled ? (
+              <LocalPaymentsPaused onUseCard={() => switchProvider("stripe")} />
             ) : (
               <MercadoPagoPayment
                 totalPEN={order.totalPEN}

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { PaymentProvider } from "../../types/checkout"
+import { mercadoPagoEnabled } from "../../lib/config"
 import { FlaskConical, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
 
 const STRIPE_CARDS = [
@@ -42,6 +43,9 @@ function CopyButton({ text }: { text: string }) {
  */
 export default function DemoGuide({ provider }: { provider: PaymentProvider }) {
   const [open, setOpen] = useState(true)
+
+  // Con Mercado Pago desactivado no hay datos de prueba que mostrar en esa pestaña
+  if (provider === "mercadopago" && !mercadoPagoEnabled) return null
 
   return (
     <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-sm">
@@ -88,7 +92,7 @@ export default function DemoGuide({ provider }: { provider: PaymentProvider }) {
           )}
 
           {/* ── Mercado Pago — Tarjeta ── */}
-          {provider === "mercadopago" && (
+          {provider === "mercadopago" && mercadoPagoEnabled && (
             <div className="space-y-4">
               <div>
                 <p className="mb-2 font-medium text-amber-900">Tarjeta de prueba (Mercado Pago)</p>
