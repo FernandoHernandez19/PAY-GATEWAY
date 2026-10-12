@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom"
 import type { ReactNode } from "react"
 import Checkout from "./Checkout"
 import { createPaymentIntent, fetchOrderSummary } from "../lib/api"
+import { initMercadoPago } from "@mercadopago/sdk-react"
 import type { OrderSummary } from "../types/order"
 
 // Nada de scripts externos ni de SDKs reales: se simulan los módulos de terceros.
@@ -20,6 +21,14 @@ vi.mock("@stripe/react-stripe-js", () => ({
 vi.mock("@mercadopago/sdk-react", () => ({
   initMercadoPago: vi.fn(),
   Payment: () => <div data-testid="mp-payment-brick" />,
+}))
+
+// El interruptor de Mercado Pago se controla desde cada test (getter = binding "vivo")
+const config = vi.hoisted(() => ({ mercadoPagoEnabled: true }))
+vi.mock("../lib/config", () => ({
+  get mercadoPagoEnabled() {
+    return config.mercadoPagoEnabled
+  },
 }))
 
 vi.mock("../lib/api", () => ({
@@ -50,6 +59,7 @@ function renderizar() {
 
 describe("Checkout", () => {
   beforeEach(() => {
+    config.mercadoPagoEnabled = true
     vi.mocked(fetchOrderSummary).mockResolvedValue(pedido)
     vi.mocked(createPaymentIntent).mockResolvedValue({ clientSecret: "pi_secret_dummy" })
   })
@@ -108,5 +118,76 @@ describe("Checkout", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo cargar el resumen del pedido.")
     expect(screen.getByRole("alert")).toHaveTextContent("VITE_API_URL")
+  })
+})
+
+describe("Checkout con Mercado Pago desactivado", () => {
+  beforeEach(() => {
+    config.mercadoPagoEnabled = false
+    vi.mocked(initMercadoPago).mockClear()
+    vi.mocked(fetchOrderSummary).mockResolvedValue(pedido)
+    vi.mocked(createPaymentIntent).mockResolvedValue({ clientSecret: "pi_secret_dummy" })
+  })
+
+  it("muestra la pestaña local como 'Próximamente'", async () => {
+    renderizar()
+    await screen.findByTestId("stripe-payment-element")
+
+    expect(screen.getByRole("tab", { name: "Pago local (Yape) · Próximamente" })).toBeInTheDocument()
+    expect(screen.queryByRole("tab", { name: "Mercado Pago (Local)" })).not.toBeInTheDocument()
+  })
+
+  it("muestra el aviso al seleccionarla y no monta Mercado Pago", async () => {
+    renderizar()
+    await screen.findByTestId("stripe-payment-element")
+
+    await userEvent.click(screen.getByRole("tab", { name: /Próximamente/ }))
+
+    expect(screen.getByText(/Los pagos locales con Yape están en pausa/)).toBeInTheDocument()
+    expect(screen.queryByTestId("stripe-payment-element")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Correo electrónico")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("mp-payment-brick")).not.toBeInTheDocument()
+    expect(initMercadoPago).not.toHaveBeenCalled()
+  })
+
+  it("oculta los datos de prueba de Mercado Pago y Yape", async () => {
+    renderizar()
+    await screen.findByTestId("stripe-payment-element")
+
+    await userEvent.click(screen.getByRole("tab", { name: /Próximamente/ }))
+
+    expect(screen.queryByText(/Datos de prueba — Yape/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Tarjeta de prueba \(Mercado Pago\)/)).not.toBeInTheDocument()
+  })
+
+  it("el botón del aviso vuelve a la pestaña de Stripe", async () => {
+    renderizar()
+    await screen.findByTestId("stripe-payment-element")
+    await userEvent.click(screen.getByRole("tab", { name: /Próximamente/ }))
+
+    await userEvent.click(screen.getByRole("button", { name: "Pagar con tarjeta internacional" }))
+
+    expect(await screen.findByTestId("stripe-payment-element")).toBeInTheDocument()
+    expect(screen.queryByText(/Los pagos locales con Yape están en pausa/)).not.toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: /Próximamente/ })).toHaveAttribute("aria-selected", "false")
+  })
+})
+
+describe("Checkout con Mercado Pago activado", () => {
+  beforeEach(() => {
+    config.mercadoPagoEnabled = true
+    vi.mocked(fetchOrderSummary).mockResolvedValue(pedido)
+    vi.mocked(createPaymentIntent).mockResolvedValue({ clientSecret: "pi_secret_dummy" })
+  })
+
+  it("renderiza Mercado Pago como antes y muestra sus datos de prueba", async () => {
+    renderizar()
+    await screen.findByTestId("stripe-payment-element")
+
+    await userEvent.click(screen.getByRole("tab", { name: "Mercado Pago (Local)" }))
+
+    expect(screen.getByRole("heading", { name: "Mercado Pago" })).toBeInTheDocument()
+    expect(screen.queryByText(/Los pagos locales con Yape están en pausa/)).not.toBeInTheDocument()
+    expect(screen.getByText("Tarjeta de prueba (Mercado Pago)")).toBeInTheDocument()
   })
 })

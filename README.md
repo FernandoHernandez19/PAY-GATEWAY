@@ -1,6 +1,6 @@
 # Veltra — Pasarela de pagos demo
 
-Checkout que acepta **tarjetas internacionales (Stripe)** y **pagos locales en soles para Perú (Mercado Pago con tarjeta y Yape)**, con un backend propio que calcula el monto y verifica los webhooks.
+Checkout que acepta **tarjetas internacionales (Stripe)** y **pagos locales en soles para Perú (Mercado Pago con tarjeta y Yape)**, con un backend propio que calcula el monto y verifica los webhooks. *(Los pagos locales están en pausa en la demo; ver [Estado de los pagos locales](#estado-de-los-pagos-locales).)*
 
 [![CI](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml/badge.svg)](https://github.com/FernandoHernandez19/PAY-GATEWAY/actions/workflows/ci.yml)
 [![Demo en vivo](https://img.shields.io/badge/demo-en%20vivo-2563eb)](https://pay-gateway-teal.vercel.app)
@@ -9,6 +9,10 @@ Checkout que acepta **tarjetas internacionales (Stripe)** y **pagos locales en s
 ## 👉 [**Abrir la demo en vivo**](https://pay-gateway-teal.vercel.app)
 
 > ⏳ **Aviso:** la API corre en el plan gratuito de Render (`https://pay-gateway-77kg.onrender.com`). Si lleva un rato sin uso, la **primera petición puede tardar ~50 segundos** en despertar; después responde con normalidad. Todo funciona en **modo de prueba**: no se mueve dinero real.
+
+## Estado de los pagos locales
+
+Mercado Pago (tarjeta y Yape) está **integrado y probado con tests**, pero **desactivado en la demo**: su sandbox no se comportó de forma confiable. Mientras está desactivado, el checkout muestra la pestaña "Pago local (Yape) · Próximamente" con un aviso y no inicializa el SDK. Se reactiva con `VITE_ENABLE_MERCADOPAGO=true`. Próximo paso evaluado: **Culqi**.
 
 ## Capturas
 
@@ -61,7 +65,7 @@ El navegador envía los datos sensibles directamente a Stripe / Mercado Pago (to
 
 ## Datos de prueba
 
-> El panel **"Modo demo"** del checkout muestra estos datos con botón de copiar.
+> El panel **"Modo demo"** del checkout muestra estos datos con botón de copiar (los de Mercado Pago y Yape solo aparecen si está activado).
 
 **Stripe** (cualquier fecha futura, CVC y código postal):
 
@@ -71,7 +75,7 @@ El navegador envía los datos sensibles directamente a Stripe / Mercado Pago (to
 | `4000 0000 0000 0002` | Pago rechazado |
 | `4000 0025 0000 3155` | Requiere 3D Secure |
 
-**Mercado Pago Perú — tarjetas** (vencimiento `11/30`):
+**Mercado Pago Perú — tarjetas** *(desactivado en la demo; solo con `VITE_ENABLE_MERCADOPAGO=true`)* (vencimiento `11/30`):
 
 | Tarjeta | Número | Titular | Resultado |
 | --- | --- | --- | --- |
@@ -79,7 +83,7 @@ El navegador envía los datos sensibles directamente a Stripe / Mercado Pago (to
 | Visa crédito | `4009 1753 3280 6176` | `OTHE` | Rechazado |
 | Mastercard débito | `5178 7816 2220 2455` | `APRO` / `OTHE` | Aprobado / Rechazado |
 
-**Yape** (modo prueba):
+**Yape** *(desactivado en la demo; solo con `VITE_ENABLE_MERCADOPAGO=true`)*:
 
 | Celular | OTP | Resultado |
 | --- | --- | --- |
@@ -110,6 +114,7 @@ npm run dev
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Frontend | Clave pública de Stripe (`pk_test_...`) |
 | `VITE_MP_PUBLIC_KEY` | Frontend | Public key de Mercado Pago (`TEST-...`) |
 | `VITE_API_URL` | Frontend | URL de la API (`http://localhost:4000` en local) |
+| `VITE_ENABLE_MERCADOPAGO` | Frontend | `true` activa Mercado Pago (tarjeta y Yape); si falta o es `false`, se muestra el aviso "Próximamente" |
 | `STRIPE_SECRET_KEY` | Servidor | Clave secreta de Stripe (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Servidor | Secreto de firma del webhook (`whsec_...`) |
 | `MP_ACCESS_TOKEN` | Servidor | Access token de Mercado Pago (`TEST-...`) |
